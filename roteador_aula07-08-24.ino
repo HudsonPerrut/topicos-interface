@@ -14,8 +14,8 @@
 RF24 radio(CE_PIN, CSN_PIN);
 uint64_t address[2] = { 0x3030303030LL, 0x3030303030LL};
 
-byte payload[32];
-byte payloadRx[32];
+byte payload[6];
+byte payloadRx[6];
 uint8_t origem=2;
 uint8_t indice=0;
 uint8_t id_rede = 1;
