@@ -14,8 +14,8 @@
 RF24 radio(CE_PIN, CSN_PIN);
 uint64_t address[2] = { 0x3030303030LL, 0x3030303030LL};
 
-byte payload[6];
-byte payloadRx[6];
+byte payload[10];
+byte payloadRx[10];
 uint8_t origem=2;
 uint8_t indice=0;
 uint8_t id_rede = 1;
@@ -35,7 +35,7 @@ void setup() {
   }
 
   radio.setPALevel(RF24_PA_MAX);  // RF24_PA_MAX is default.
-  radio.setChannel(117);
+  radio.setChannel(50);
   radio.setPayloadSize(sizeof(payload));  // float datatype occupies 4 bytes
   radio.setAutoAck(false);
   radio.setCRCLength(RF24_CRC_DISABLED);
@@ -72,7 +72,7 @@ void printPacote(byte *pac, int tamanho){
 bool aguardaMsg(int tipo){
     radio.startListening();
     unsigned long tempoInicio = millis();
-    while(millis()-tempoInicio<1000){
+    while(millis()-tempoInicio<500){
       if (radio.available()) {              // is there a payload? get the pipe number that recieved it
         uint8_t bytes = radio.getPayloadSize();  // get the size of the payload
         radio.read(&payloadRx[0], bytes);             // fetch payload from FIFO
@@ -124,17 +124,17 @@ void loop() {
       uint8_t bytes = radio.getPayloadSize();  // get the size of the payload
       radio.read(&payloadRx[0], bytes);             // fetch payload from FIFO
       if(payloadRx[0]== id_rede && payloadRx[1]==origem){
-        Serial.println("pacote pra mim");
+        //Serial.println("pacote pra mim");
         radio.flush_rx();
         if(payloadRx[3] = RTS){
           report = sendPacket(&payloadRx[0], sizeof(payloadRx), payloadRx[2], CTS);
         }
         report = aguardaMsg(MSG);
         radio.flush_rx();
-        printPacote(&payloadRx[0], sizeof(payload));
+       // printPacote(&payloadRx[0], sizeof(payload));
         if (report){
+          sendPacket(&payloadRx[0], sizeof(payloadRx), payloadRx[2], ACK);
           Serial.println("Sucesso!");
-          report = sendPacket(&payloadRx[0], sizeof(payloadRx), payloadRx[2], ACK);
         }
       }
       //printPacote(&payloadRx[0], bytes);
