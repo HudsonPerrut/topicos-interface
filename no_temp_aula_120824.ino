@@ -15,7 +15,7 @@
 #define RTS 2
 #define CTS 3
 
-#define TIMEOUT 500 //milisegundos
+#define TIMEOUT 1000 //milisegundos
 
 static const float offset = 335.2; 
 static const float ganho = 1.06154;
@@ -23,11 +23,13 @@ static const float ganho = 1.06154;
 RF24 radio(CE_PIN, CSN_PIN);
 uint64_t address[2] = { 0x3030303030LL, 0x3030303030LL};
  
-byte payload[6] = {0,1,2,3,4,68};
-byte payloadRx[6] = "     ";
+byte payload[10] = {0,1,2,3,4,5,6,7,8,9};
+byte payloadRx[10] = "          ";
 uint8_t origem=26;
 uint8_t indice=0;
 uint8_t id_rede = 1;
+uint8_t vtempInt,vtempDec;
+float celsius;
 
 
 void ADC_init() {
@@ -83,7 +85,7 @@ void setup() {
   }
 
   radio.setPALevel(RF24_PA_MAX);  // RF24_PA_MAX is default.
-  radio.setChannel(117);
+  radio.setChannel(50);
   radio.setPayloadSize(sizeof(payload));  // float datatype occupies 4 bytes
   radio.setAutoAck(false);
   radio.setCRCLength(RF24_CRC_DISABLED);
@@ -154,7 +156,7 @@ bool sendPacket(byte *pacote, int tamanho, int destino, int controle){
     while(1){
         
        radio.startListening();
-       delayMicroseconds(70);
+       delayMicroseconds(50);
        radio.stopListening();
        if (!radio.testCarrier()) {
           return radio.write(&pacote[0], tamanho);
@@ -173,10 +175,10 @@ void loop() {
   uint16_t adc = ler_temperatura();
 
   // Conversão do valor ADC para temperatura em graus Celsius
-  float celsius = (adc - offset) / ganho;
+  celsius = (adc - offset) / ganho;
 
-  char temperatura_str[7];
-  float_to_string(celsius, temperatura_str);
+ // char temperatura_str[7];
+  //float_to_string(celsius, temperatura_str);
 
 
   //if (Serial.available()) {
@@ -189,9 +191,21 @@ void loop() {
       bool report = sendPacket(&payload[0], sizeof(payload), 2, RTS);  // transmit & save the report
       report = aguardaMsg(CTS);
       if(report){
-        Serial.println("Sucesso!");
-        payload[5] = (int32_t)celsius;
-        Serial.print(celsius);
+        vtempInt = (int32_t)celsius;
+        vtempDec = (int32_t)(celsius * 100) % 100;
+
+        payload[5] = vtempInt / 10;
+        payload[6] = vtempInt % 10;
+
+        payload[7] = vtempDec / 10;
+        payload[8] = vtempDec % 10;
+
+        if(celsius < 0) {
+          payload[9] = 1;
+        }else{
+          payload[9] = 0;
+        }
+        -============Serial.print(celsius);
         Serial.println("\n");
         sendPacket(&payload[0], sizeof(payload), 2, MSG);
         report = aguardaMsg(ACK);
