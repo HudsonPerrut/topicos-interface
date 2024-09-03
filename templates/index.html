@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitura da Porta Serial</title>
+    <script>
+        function fetchData() {
+            fetch('/data')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('serial-data').innerText = data.value || 'Aguardando dados...';
+                });
+        }
+
+        setInterval(fetchData, 1000); // Atualiza a cada 1 segundo
+    </script>
+</head>
+<body>
+    <h1>Leitura da Porta Serial</h1>
+    <p id="serial-data">Aguardando dados...</p>
+</body>
+</html>
